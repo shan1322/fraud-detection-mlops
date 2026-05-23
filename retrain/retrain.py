@@ -3,8 +3,6 @@ import pandas as pd
 import numpy as np
 import pickle
 import json
-import os
-import zipfile
 import mlflow
 import mlflow.xgboost
 import xgboost as xgb
@@ -15,42 +13,8 @@ from mlflow.models.signature import infer_signature
 
 BASE = Path(__file__).parent.parent / "models"
 DRIFT_RESULT_FILE = Path(__file__).parent.parent / "drift_result.json"
-DATA_FILE = Path(__file__).parent / "train_transaction.csv"
+DATA_FILE = BASE / "train_filtered.csv"
 SEED = 42
-
-def download_data():
-    if DATA_FILE.exists() and DATA_FILE.stat().st_size > 100 * 1024**2:
-        print(f"train_transaction.csv exists — skipping download")
-        return
-
-    print(f"Downloading train_transaction.csv...")
-    download_dir = Path(__file__).parent
-
-    # remove corrupt file if exists
-    if DATA_FILE.exists():
-        DATA_FILE.unlink()
-        print("Removed corrupt file")
-
-    os.system(f"kaggle competitions download -c ieee-fraud-detection -f train_transaction.csv -p {download_dir}/")
-
-    # kaggle saves as train_transaction.csv but it's actually a zip
-    downloaded = download_dir / "train_transaction.csv"
-    zip_renamed = download_dir / "train_transaction.zip"
-
-    if downloaded.exists():
-        print(f"Downloaded file size: {downloaded.stat().st_size / 1024**2:.1f}MB")
-        # rename to .zip so zipfile can open it
-        downloaded.rename(zip_renamed)
-        print("Unzipping...")
-        with zipfile.ZipFile(zip_renamed, 'r') as z:
-            print(f"Files in zip: {z.namelist()}")
-            z.extractall(download_dir)
-        zip_renamed.unlink()
-        print("Unzipped successfully")
-    else:
-        print("No file found after download")
-
-    print("Download complete")
 
 def retrain():
     if not DRIFT_RESULT_FILE.exists():
@@ -62,20 +26,15 @@ def retrain():
 
     drift_detected = drift_result["drift_detected"]
 
-    # comment out for testing
-    # if not drift_detected:
-    #     print("No drift detected — skipping retrain")
-    #     return
+    if not drift_detected:
+        print("No drift detected — skipping retrain")
+        return
 
     print("Drift detected — starting retrain...")
 
-    download_data()
-
     if not DATA_FILE.exists():
-        print("Data download failed — cannot retrain")
+        print("train_filtered.csv not found in models/")
         return
-
-    print(f"File size: {DATA_FILE.stat().st_size / 1024**2:.1f}MB")
 
     with open(BASE / "feature_metadata.json") as f:
         metadata = json.load(f)
@@ -84,10 +43,8 @@ def retrain():
     CAT_COLS = metadata["cat_cols"]
     TARGET = "isFraud"
 
-    needed_cols = [TARGET] + NUM_COLS + CAT_COLS
-
     print("Loading training data...")
-    df = pd.read_csv(DATA_FILE, usecols=lambda c: c in needed_cols)
+    df = pd.read_csv(DATA_FILE)
     print(f"Loaded {df.shape[0]} rows, {df.shape[1]} columns")
 
     available_num = [c for c in NUM_COLS if c in df.columns]
@@ -164,9 +121,6 @@ def retrain():
         metadata["auc_roc"] = metrics["auc_roc"]
         with open(BASE / "feature_metadata.json", "w") as f:
             json.dump(metadata, f, indent=2)
-
-        DATA_FILE.unlink()
-        print("Cleaned up train_transaction.csv")
 
     print(f"\n=== RETRAIN COMPLETE ===")
     for k, v in metrics.items():

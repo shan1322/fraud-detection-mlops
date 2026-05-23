@@ -20,18 +20,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install pandas "numpy==1.26.4" "scikit-learn==1.6.1" mlflow kaggle xgboost scipy
-
-      - name: Verify versions
-        run: |
-          python3 -c "import numpy; print('numpy:', numpy.__version__)"
-  
-
-      - name: Set up Kaggle credentials
-        run: |
-          mkdir -p ~/.kaggle
-          echo '{"username":"${{ secrets.KAGGLE_USERNAME }}","key":"${{ secrets.KAGGLE_KEY }}"}' > ~/.kaggle/kaggle.json
-          chmod 600 ~/.kaggle/kaggle.json
+          pip install pandas "numpy==1.26.4" "scikit-learn==1.6.1" mlflow xgboost scipy
 
       - name: Run drift monitor
         run: python3 monitor/monitor.py
