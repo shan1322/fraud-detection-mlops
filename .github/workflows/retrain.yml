@@ -25,8 +25,7 @@ jobs:
       - name: Verify versions
         run: |
           python3 -c "import numpy; print('numpy:', numpy.__version__)"
-          python3 -c "import nltk; print('nltk ok')"
-          python3 -c "import evidently; print('evidently ok')"
+  
 
       - name: Set up Kaggle credentials
         run: |
