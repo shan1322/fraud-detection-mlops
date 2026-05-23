@@ -405,7 +405,7 @@
   "fraud_rate_val": 0.0349933958749619,
   "best_run_id": "ab88b3fc0be7418ab77267d739eb4c48",
   "best_model": "xgboost-tuned",
-  "auc_roc": 0.9448,
+  "auc_roc": 0.9147,
   "num_cols": [
     "TransactionAmt",
     "card1",
