@@ -4,6 +4,7 @@ import numpy as np
 import pickle
 import json
 import os
+import zipfile
 import mlflow
 import mlflow.xgboost
 import xgboost as xgb
@@ -21,10 +22,17 @@ def download_data():
     if DATA_FILE.exists():
         print("train_transaction.csv already exists — skipping download")
         return
-    print("Downloading train_transaction.csv from Kaggle...")
-    os.system("pip install kaggle -q")
+    print(f"Downloading train_transaction.csv...")
     os.system(f"kaggle competitions download -c ieee-fraud-detection -f train_transaction.csv -p {Path(__file__).parent}/")
-    os.system(f"unzip -o {Path(__file__).parent}/train_transaction.csv.zip -d {Path(__file__).parent}/")
+    zip_file = Path(__file__).parent / "train_transaction.csv.zip"
+    if zip_file.exists():
+        print("Unzipping...")
+        with zipfile.ZipFile(zip_file, 'r') as z:
+            z.extractall(Path(__file__).parent)
+        zip_file.unlink()
+        print("Unzipped successfully")
+    else:
+        print("No zip file found after download")
     print("Download complete")
 
 def retrain():
@@ -59,7 +67,6 @@ def retrain():
 
     needed_cols = [TARGET] + NUM_COLS + CAT_COLS
 
-    # load only needed columns
     print("Loading training data...")
     df = pd.read_csv(DATA_FILE, usecols=lambda c: c in needed_cols)
     print(f"Loaded {df.shape[0]} rows, {df.shape[1]} columns")
