@@ -10,7 +10,7 @@ PREDICTIONS_FILE = Path(__file__).parent.parent / "incoming_predictions.csv"
 DRIFT_RESULT_FILE = Path(__file__).parent.parent / "drift_result.json"
 
 DRIFT_THRESHOLD = 0.05  # p-value threshold
-DRIFT_SHARE = 0.2       # 20% of columns drifted = retrain
+DRIFT_SHARE = 0.15      # 20% of columns drifted = retrain
 
 def check_drift():
     reference = pd.read_csv(BASE / "reference_data.csv")
