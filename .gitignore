@@ -7,3 +7,4 @@ drift_result.json
 deploy_to_hf.py
 deploy_to_hf.py
 incoming_predictions.csv
+hf_space/

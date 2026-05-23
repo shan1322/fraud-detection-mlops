@@ -21,7 +21,9 @@ jobs:
       - name: Install dependencies
         run: |
           pip install "numpy==1.26.4"
-          pip install pandas "scikit-learn==1.6.1" "evidently==0.4.16" mlflow kaggle xgboost
+          pip install pandas "scikit-learn==1.6.1" mlflow kaggle xgboost
+          pip install "evidently==0.4.16" --no-deps
+          pip install pydantic tqdm typer rich plotly
 
       - name: Set up Kaggle credentials
         run: |
