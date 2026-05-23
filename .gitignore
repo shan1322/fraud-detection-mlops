@@ -1,7 +1,6 @@
-incoming_predictions.csv
-test_api.py
 __pycache__/
 *.pyc
 .env
 retrain/train_transaction.csv
 retrain/train_transaction.csv.zip
+drift_result.json
