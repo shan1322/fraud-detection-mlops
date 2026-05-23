@@ -19,9 +19,16 @@ DATA_FILE = Path(__file__).parent / "train_transaction.csv"
 SEED = 42
 
 def download_data():
+    # check if existing file is valid (should be >500MB)
     if DATA_FILE.exists():
-        print("train_transaction.csv already exists — skipping download")
-        return
+        size_mb = DATA_FILE.stat().st_size / 1024**2
+        if size_mb > 100:
+            print(f"train_transaction.csv exists ({size_mb:.0f}MB) — skipping download")
+            return
+        else:
+            print(f"File exists but too small ({size_mb:.1f}MB) — corrupt, deleting...")
+            DATA_FILE.unlink()
+
     print(f"Downloading train_transaction.csv...")
     os.system(f"kaggle competitions download -c ieee-fraud-detection -f train_transaction.csv -p {Path(__file__).parent}/")
     zip_file = Path(__file__).parent / "train_transaction.csv.zip"
