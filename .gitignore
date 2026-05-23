@@ -4,3 +4,5 @@ __pycache__/
 retrain/train_transaction.csv
 retrain/train_transaction.csv.zip
 drift_result.json
+deploy_to_hf.py
+deploy_to_hf.py
