@@ -20,11 +20,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install "numpy==1.26.4"
-          pip install pandas "scikit-learn==1.6.1" mlflow kaggle xgboost scipy statsmodels pydantic PyYAML requests rich typer typing-inspect uvicorn watchdog plotly nltk fsspec litestar dynaconf iterative-telemetry
-          python3 -c "import nltk; nltk.download('words'); nltk.download('wordnet')"
-          pip install --no-deps "evidently==0.4.16"
-          pip install "numpy==1.26.4" --force-reinstall
+          pip install pandas "numpy==1.26.4" "scikit-learn==1.6.1" mlflow kaggle xgboost scipy
 
       - name: Verify versions
         run: |
