@@ -19,27 +19,37 @@ DATA_FILE = Path(__file__).parent / "train_transaction.csv"
 SEED = 42
 
 def download_data():
-    # check if existing file is valid (should be >500MB)
-    if DATA_FILE.exists():
-        size_mb = DATA_FILE.stat().st_size / 1024**2
-        if size_mb > 100:
-            print(f"train_transaction.csv exists ({size_mb:.0f}MB) — skipping download")
-            return
-        else:
-            print(f"File exists but too small ({size_mb:.1f}MB) — corrupt, deleting...")
-            DATA_FILE.unlink()
+    if DATA_FILE.exists() and DATA_FILE.stat().st_size > 100 * 1024**2:
+        print(f"train_transaction.csv exists — skipping download")
+        return
 
     print(f"Downloading train_transaction.csv...")
-    os.system(f"kaggle competitions download -c ieee-fraud-detection -f train_transaction.csv -p {Path(__file__).parent}/")
-    zip_file = Path(__file__).parent / "train_transaction.csv.zip"
-    if zip_file.exists():
+    download_dir = Path(__file__).parent
+
+    # remove corrupt file if exists
+    if DATA_FILE.exists():
+        DATA_FILE.unlink()
+        print("Removed corrupt file")
+
+    os.system(f"kaggle competitions download -c ieee-fraud-detection -f train_transaction.csv -p {download_dir}/")
+
+    # kaggle saves as train_transaction.csv but it's actually a zip
+    downloaded = download_dir / "train_transaction.csv"
+    zip_renamed = download_dir / "train_transaction.zip"
+
+    if downloaded.exists():
+        print(f"Downloaded file size: {downloaded.stat().st_size / 1024**2:.1f}MB")
+        # rename to .zip so zipfile can open it
+        downloaded.rename(zip_renamed)
         print("Unzipping...")
-        with zipfile.ZipFile(zip_file, 'r') as z:
-            z.extractall(Path(__file__).parent)
-        zip_file.unlink()
+        with zipfile.ZipFile(zip_renamed, 'r') as z:
+            print(f"Files in zip: {z.namelist()}")
+            z.extractall(download_dir)
+        zip_renamed.unlink()
         print("Unzipped successfully")
     else:
-        print("No zip file found after download")
+        print("No file found after download")
+
     print("Download complete")
 
 def retrain():
@@ -64,6 +74,8 @@ def retrain():
     if not DATA_FILE.exists():
         print("Data download failed — cannot retrain")
         return
+
+    print(f"File size: {DATA_FILE.stat().st_size / 1024**2:.1f}MB")
 
     with open(BASE / "feature_metadata.json") as f:
         metadata = json.load(f)
