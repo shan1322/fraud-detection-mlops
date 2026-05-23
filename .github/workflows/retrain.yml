@@ -21,13 +21,16 @@ jobs:
       - name: Install dependencies
         run: |
           pip install "numpy==1.26.4"
-          pip install --no-deps "evidently==0.4.16"
           pip install pandas "scikit-learn==1.6.1" mlflow kaggle xgboost scipy statsmodels pydantic PyYAML requests rich typer typing-inspect uvicorn watchdog plotly nltk fsspec litestar dynaconf iterative-telemetry
-          pip install "numpy==1.26.4" --force-reinstall
           python3 -c "import nltk; nltk.download('words'); nltk.download('wordnet')"
+          pip install --no-deps "evidently==0.4.16"
+          pip install "numpy==1.26.4" --force-reinstall
 
-      - name: Verify numpy version
-        run: python3 -c "import numpy; print('numpy:', numpy.__version__)"
+      - name: Verify versions
+        run: |
+          python3 -c "import numpy; print('numpy:', numpy.__version__)"
+          python3 -c "import nltk; print('nltk ok')"
+          python3 -c "import evidently; print('evidently ok')"
 
       - name: Set up Kaggle credentials
         run: |
