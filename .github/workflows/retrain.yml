@@ -25,6 +25,7 @@ jobs:
           pip install pandas "scikit-learn==1.6.1" mlflow kaggle xgboost scipy statsmodels pydantic PyYAML requests rich typer typing-inspect uvicorn watchdog plotly nltk fsspec litestar dynaconf iterative-telemetry
           pip install "numpy==1.26.4" --force-reinstall
           python3 -c "import nltk; nltk.download('words'); nltk.download('wordnet')"
+
       - name: Verify numpy version
         run: python3 -c "import numpy; print('numpy:', numpy.__version__)"
 
