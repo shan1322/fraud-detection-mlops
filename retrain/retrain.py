@@ -35,7 +35,7 @@ def retrain():
     with open(DRIFT_RESULT_FILE) as f:
         drift_result = json.load(f)
 
-    drift_detected = drift_result["metrics"][0]["result"]["dataset_drift"]
+    drift_detected = drift_result["drift_detected"]
 
     # comment out for testing
     # if not drift_detected:
