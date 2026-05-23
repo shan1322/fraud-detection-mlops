@@ -3,3 +3,5 @@ test_api.py
 __pycache__/
 *.pyc
 .env
+retrain/train_transaction.csv
+retrain/train_transaction.csv.zip
