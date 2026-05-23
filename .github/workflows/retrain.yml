@@ -20,7 +20,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install pandas "numpy<2" scikit-learn==1.6.1 xgboost \
+          pip install "numpy==1.26.4"
+          pip install pandas  scikit-learn==1.6.1 xgboost \
                       evidently==0.4.16 mlflow kaggle
 
       - name: Set up Kaggle credentials
