@@ -12,7 +12,7 @@ import os
 app = FastAPI(title="Fraud Detection API")
 
 BASE = Path(__file__).parent.parent / "models"
-PREDICTIONS_FILE = "incoming_predictions.csv"
+PREDICTIONS_FILE = Path(__file__).parent.parent / "incoming_predictions.csv"
 
 with open(BASE / "model.pkl", "rb") as f:
     model = pickle.load(f)
@@ -45,17 +45,18 @@ def predict(transaction: Dict[str, Any]):
     proba = float(model.predict_proba(input_processed)[0][1])
     prediction = int(proba >= 0.5)
 
+    # log all 217 features + prediction to CSV
     log_row = {
         "timestamp": datetime.now().isoformat(),
         "fraud_probability": round(proba, 4),
         "is_fraud_predicted": prediction,
         "risk_level": "HIGH" if proba >= 0.7 else "MEDIUM" if proba >= 0.3 else "LOW",
-        "TransactionAmt": transaction.get("TransactionAmt", None),
-        "ProductCD": transaction.get("ProductCD", None),
-        "card4": transaction.get("card4", None),
     }
+    for col in NUM_COLS + CAT_COLS:
+        log_row[col] = transaction.get(col, None)
+
     file_exists = os.path.exists(PREDICTIONS_FILE)
-    with open(PREDICTIONS_FILE, "a", newline="") as f:
+    with open(str(PREDICTIONS_FILE), "a", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=log_row.keys())
         if not file_exists:
             writer.writeheader()
