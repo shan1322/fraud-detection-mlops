@@ -1,14 +1,16 @@
 # monitor/monitor.py
 import pandas as pd
+import numpy as np
 import json
 from pathlib import Path
-
-from evidently.report import Report
-from evidently.metric_preset import DataDriftPreset
+from scipy.stats import ks_2samp, chi2_contingency
 
 BASE = Path(__file__).parent.parent / "models"
 PREDICTIONS_FILE = Path(__file__).parent.parent / "incoming_predictions.csv"
 DRIFT_RESULT_FILE = Path(__file__).parent.parent / "drift_result.json"
+
+DRIFT_THRESHOLD = 0.05  # p-value threshold
+DRIFT_SHARE = 0.2       # 20% of columns drifted = retrain
 
 def check_drift():
     reference = pd.read_csv(BASE / "reference_data.csv")
@@ -18,9 +20,8 @@ def check_drift():
 
     NUM_COLS = metadata["num_cols"]
     CAT_COLS = metadata["cat_cols"]
-    ALL_COLS = NUM_COLS + CAT_COLS
 
-    reference = reference[[c for c in ALL_COLS if c in reference.columns]]
+    reference = reference[[c for c in NUM_COLS + CAT_COLS if c in reference.columns]]
 
     if not PREDICTIONS_FILE.exists():
         print("No incoming predictions yet — skipping drift check")
@@ -28,63 +29,65 @@ def check_drift():
 
     incoming = pd.read_csv(PREDICTIONS_FILE)
 
-    if len(incoming) < 5:
-        print(f"Only {len(incoming)} predictions — need at least 5")
+    if len(incoming) < 20:
+        print(f"Only {len(incoming)} predictions — need at least 20")
         return False
 
-    common_cols = [c for c in ALL_COLS if c in incoming.columns and c in reference.columns]
+    common_num = [c for c in NUM_COLS if c in incoming.columns and c in reference.columns]
+    common_cat = [c for c in CAT_COLS if c in incoming.columns and c in reference.columns]
 
-    if len(common_cols) == 0:
-        print("No common columns between reference and incoming data")
-        return False
+    drifted = []
+    stable = []
 
-    reference_sample = reference[common_cols].sample(
-        min(1000, len(reference)), random_state=42
-    )
-    incoming_sample = incoming[common_cols].sample(
-        min(len(incoming), 1000), random_state=42
-    )
+    # numeric — KS test
+    for col in common_num:
+        ref_vals = reference[col].dropna()
+        inc_vals = incoming[col].dropna()
+        if len(ref_vals) < 5 or len(inc_vals) < 5:
+            continue
+        stat, p_value = ks_2samp(ref_vals, inc_vals)
+        if p_value < DRIFT_THRESHOLD:
+            drifted.append(f"  🚨 {col}: p={round(p_value, 4)}")
+        else:
+            stable.append(f"  ✅ {col}: p={round(p_value, 4)}")
 
-    report = Report(metrics=[DataDriftPreset(drift_share=0.03)])
-    report.run(reference_data=reference_sample, current_data=incoming_sample)
+    # categorical — chi2 test
+    for col in common_cat:
+        ref_vals = reference[col].fillna("missing")
+        inc_vals = incoming[col].fillna("missing")
+        all_cats = set(ref_vals.unique()) | set(inc_vals.unique())
+        ref_counts = [ref_vals.value_counts().get(c, 0) for c in all_cats]
+        inc_counts = [inc_vals.value_counts().get(c, 0) for c in all_cats]
+        try:
+            stat, p_value, _, _ = chi2_contingency([ref_counts, inc_counts])
+            if p_value < DRIFT_THRESHOLD:
+                drifted.append(f"  🚨 {col}: p={round(p_value, 4)}")
+            else:
+                stable.append(f"  ✅ {col}: p={round(p_value, 4)}")
+        except:
+            continue
 
-    result = report.as_dict()
+    total = len(drifted) + len(stable)
+    drift_share = len(drifted) / total if total > 0 else 0
+    drift_detected = drift_share >= DRIFT_SHARE
+
+    print(f"\n=== DRIFT REPORT ===")
+    print(f"Drifted columns ({len(drifted)}/{total}) — {round(drift_share*100, 1)}%")
+    for d in drifted[:20]:
+        print(d)
+    print(f"\nDrift detected: {drift_detected}")
+
+    result = {
+        "drift_detected": drift_detected,
+        "drift_share": round(drift_share, 4),
+        "drifted_columns": len(drifted),
+        "total_columns": total
+    }
 
     with open(DRIFT_RESULT_FILE, "w") as f:
         json.dump(result, f, indent=2)
 
-    drift_detected = result["metrics"][0]["result"]["dataset_drift"]
-
-    # print per column drift details
-    column_results = result["metrics"][1]["result"]["drift_by_columns"]
-    print(f"\n=== DRIFT BY COLUMN ===")
-    drifted = []
-    not_drifted = []
-    for col, details in column_results.items():
-        drift_score = round(details["drift_score"], 4)
-        detected = details["drift_detected"]
-        if detected:
-            drifted.append(f"  🚨 {col}: {drift_score}")
-        else:
-            not_drifted.append(f"  ✅ {col}: {drift_score}")
-
-    print(f"\nDrifted columns ({len(drifted)}):")
-    for d in drifted:
-        print(d)
-
-    print(f"\nStable columns ({len(not_drifted)}):")
-    for d in not_drifted:
-        print(d)
-
-    print(f"\nTotal drifted: {len(drifted)}/{len(drifted)+len(not_drifted)}")
-
-    if drift_detected:
-        print("\n🚨 DATA DRIFT DETECTED")
-    else:
-        print("\n✅ No significant drift")
-
     return drift_detected
-
 
 if __name__ == "__main__":
     check_drift()
