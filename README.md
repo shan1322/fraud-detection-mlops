@@ -2,8 +2,12 @@
 
 ![Demo](animations/animation.gif)
 
+[![Demo Video](https://img.youtube.com/vi/2XAbuFyDj0g/maxresdefault.jpg)](https://www.youtube.com/watch?v=2XAbuFyDj0g)
+
+> ▶ Click thumbnail to watch full demo
+
 **Live API:** https://shan1322-fraud-detection-api.hf.space  
-**Tech:** XGBoost · FastAPI · MLflow · Evidently · GitHub Actions · Hugging Face  
+**Tech:** XGBoost · FastAPI · MLflow · GitHub Actions · Hugging Face  
 **Dataset:** IEEE-CIS Fraud Detection (590K transactions, 394 features)
 
 ---
@@ -17,8 +21,6 @@ Production-ready fraud detection system that:
 
 ---
 
-
-
 > Optimized for **high recall (82%)** to catch maximum fraud cases.
 
 ---
@@ -26,7 +28,7 @@ Production-ready fraud detection system that:
 ## ⚙️ System Flow
 
 ```
-Data → Train → Deploy API → Log Predictions  
+Data → Train → Deploy API → Log Predictions
      → Drift Detection → Auto Retrain → Redeploy
 ```
 
@@ -65,9 +67,9 @@ curl -X POST https://shan1322-fraud-detection-api.hf.space/predict \
 ## 📂 Project Structure
 
 ```
-apps/        FastAPI service  
-monitor/     Drift detection  
-retrain/     Auto retraining  
-models/      Model artifacts  
-.github/     CI/CD workflows  
+apps/        FastAPI service
+monitor/     Drift detection
+retrain/     Auto retraining
+models/      Model artifacts
+.github/     CI/CD workflows
 ```
