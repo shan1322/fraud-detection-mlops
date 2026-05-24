@@ -17,13 +17,7 @@ Production-ready fraud detection system that:
 
 ---
 
-## 🧠 Model Performance
 
-| Model | AUC | Recall | F1 |
-|------|-----|--------|----|
-| Logistic Regression | 0.78 | 0.61 | .58 |
-| XGBoost (baseline) | 0.93 | 0.81 | 0.67 |
-| **XGBoost (tuned)** | **0.94** | **0.89** | **0.82** |
 
 > Optimized for **high recall (82%)** to catch maximum fraud cases.
 
