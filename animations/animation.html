@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #fff; color: #111; padding: 24px 16px; }
+.section-label { text-align: center; font-size: 11px; color: #888; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 16px; }
+.row { display: flex; align-items: flex-start; justify-content: center; gap: 0; flex-wrap: nowrap; }
+.node { display: flex; flex-direction: column; align-items: center; width: 130px; flex-shrink: 0; }
+.node-box { width: 115px; border: 1.5px solid #e0e0e0; border-radius: 14px; padding: 14px 10px 12px; background: #fff; display: flex; flex-direction: column; align-items: center; gap: 5px; transition: border-color .3s, box-shadow .3s; position: relative; cursor: default; }
+.node-box.active { border-color: #4A90E2; box-shadow: 0 0 0 3px rgba(74,144,226,0.15); }
+.node-box.done { border-color: #34C759; }
+.node-name { font-size: 13px; font-weight: 600; text-align: center; color: #111; }
+.node-desc { font-size: 10px; color: #666; text-align: center; line-height: 1.4; }
+.badge { font-size: 9px; padding: 2px 8px; border-radius: 20px; font-weight: 600; margin-top: 2px; }
+.badge-blue { background: #E8F0FE; color: #1967D2; }
+.badge-green { background: #E6F4EA; color: #1E8E3E; }
+.badge-orange { background: #FEF3E2; color: #E37400; }
+.arrow { display: flex; align-items: center; justify-content: center; width: 36px; flex-shrink: 0; padding-top: 20px; }
+.arrow svg { width: 28px; height: 12px; }
+.arrow.done svg line, .arrow.done svg polyline { stroke: #34C759; transition: stroke .3s; }
+.divider { width: 100%; max-width: 580px; margin: 20px auto; border: none; border-top: 1px solid #eee; }
+.vertical-connector { display: flex; flex-direction: column; align-items: center; gap: 0; margin: 8px 0; }
+.v-line { width: 1px; height: 24px; background: #ccc; transition: background .3s; }
+.v-line.done { background: #34C759; }
+.v-label { font-size: 10px; color: #888; padding: 3px 8px; background: #f5f5f5; border-radius: 10px; border: 1px solid #e0e0e0; transition: all .3s; }
+.v-label.done { border-color: #34C759; color: #1E8E3E; }
+.v-arrow { font-size: 12px; color: #888; transition: color .3s; }
+.v-arrow.done { color: #34C759; }
+.controls { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; align-items: center; }
+.btn-run { background: #1967D2; color: #fff; border: none; border-radius: 8px; padding: 8px 20px; font-size: 13px; font-weight: 500; cursor: pointer; }
+.btn-run:hover { background: #1557B0; }
+.btn-run:disabled { background: #ccc; cursor: not-allowed; }
+.btn-reset { background: #f5f5f5; color: #333; border: 1px solid #ddd; border-radius: 8px; padding: 8px 14px; font-size: 13px; cursor: pointer; }
+.progress { display: flex; gap: 6px; align-items: center; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: #ddd; transition: background .3s; }
+.dot.active { background: #4A90E2; }
+.dot.done { background: #34C759; }
+.status { font-size: 11px; color: #888; min-width: 140px; }
+</style>
+</head>
+<body>
+<div class="controls">
+  <button class="btn-run" id="btn-run" onclick="startPipeline()">▶ Run Pipeline</button>
+  <button class="btn-reset" onclick="resetPipeline()">↺ Reset</button>
+  <div class="progress">
+    <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+    <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+  </div>
+  <div class="status" id="status">Ready</div>
+</div>
+
+<div class="section-label">Training — one time</div>
+<div class="row">
+  <div class="node"><div class="node-box" id="n0">
+    <svg width="38" height="38" viewBox="0 0 38 38"><rect width="38" height="38" rx="8" fill="#20BEFF"/><path d="M10 28V10h4v9l7-9h5l-8 10 8.5 8h-5.5l-7-7.5V28H10z" fill="white"/></svg>
+    <div class="node-name">Kaggle</div><div class="node-desc">590k transactions<br>IEEE-CIS dataset</div><span class="badge badge-blue">XGBoost</span>
+  </div></div>
+  <div class="arrow"><svg viewBox="0 0 28 12"><line x1="0" y1="6" x2="22" y2="6" stroke="#ccc" stroke-width="1.5"/><polyline points="16,2 22,6 16,10" fill="none" stroke="#ccc" stroke-width="1.5" stroke-linejoin="round"/></svg></div>
+  <div class="node"><div class="node-box" id="n1">
+    <svg width="38" height="38" viewBox="0 0 38 38"><rect width="38" height="38" rx="8" fill="#0194E2"/><path d="M9 28L19 8L29 28" stroke="white" stroke-width="2.5" fill="none" stroke-linejoin="round"/><circle cx="19" cy="22" r="3" fill="white"/></svg>
+    <div class="node-name">MLflow</div><div class="node-desc">3 experiments<br>tracked AUC 0.94</div><span class="badge badge-green">best model</span>
+  </div></div>
+  <div class="arrow"><svg viewBox="0 0 28 12"><line x1="0" y1="6" x2="22" y2="6" stroke="#ccc" stroke-width="1.5"/><polyline points="16,2 22,6 16,10" fill="none" stroke="#ccc" stroke-width="1.5" stroke-linejoin="round"/></svg></div>
+  <div class="node"><div class="node-box" id="n2">
+    <svg width="38" height="38" viewBox="0 0 38 38"><rect width="38" height="38" rx="8" fill="#24292F"/><path fill-rule="evenodd" d="M19 5C11.268 5 5 11.268 5 19c0 6.196 4.027 11.45 9.572 13.295.7.128.956-.303.956-.674v-2.612c-3.893.847-4.714-1.654-4.714-1.654-.636-1.617-1.553-2.048-1.553-2.048-1.27-.869.097-.852.097-.852 1.407.099 2.147 1.445 2.147 1.445 1.25 2.14 3.276 1.522 4.074 1.164.126-.905.488-1.522.889-1.872-3.108-.355-6.378-1.556-6.378-6.92 0-1.529.546-2.779 1.443-3.759-.145-.354-.625-1.779.136-3.708 0 0 1.177-.376 3.853 1.435A13.43 13.43 0 0119 11.31c1.19.006 2.388.161 3.508.471 2.675-1.811 3.85-1.435 3.85-1.435.763 1.93.283 3.354.138 3.708.899.98 1.441 2.23 1.441 3.759 0 5.378-3.276 6.561-6.394 6.908.503.434.96 1.286.96 2.593v3.844c0 .374.253.808.964.671C28.977 30.445 33 25.193 33 19c0-7.732-6.268-14-14-14z" fill="white"/></svg>
+    <div class="node-name">GitHub</div><div class="node-desc">model.pkl<br>preprocessor.pkl<br>train_filtered.csv</div>
+  </div></div>
+  <div class="arrow"><svg viewBox="0 0 28 12"><line x1="0" y1="6" x2="22" y2="6" stroke="#ccc" stroke-width="1.5"/><polyline points="16,2 22,6 16,10" fill="none" stroke="#ccc" stroke-width="1.5" stroke-linejoin="round"/></svg></div>
+  <div class="node"><div class="node-box" id="n3">
+    <svg width="38" height="38" viewBox="0 0 38 38"><rect width="38" height="38" rx="8" fill="#FFD21E"/><text x="19" y="26" text-anchor="middle" font-size="20">🤗</text></svg>
+    <div class="node-name">Hugging Face</div><div class="node-desc">FastAPI live<br>endpoint predict<br>+ log</div><span class="badge badge-green">live</span>
+  </div></div>
+</div>
+
+<hr class="divider">
+
+<div class="section-label">Production — continuous</div>
+<div class="row">
+  <div class="node"><div class="node-box" id="n4">
+    <svg width="38" height="38" viewBox="0 0 38 38"><rect width="38" height="38" rx="8" fill="#2088FF"/><circle cx="19" cy="19" r="9" stroke="white" stroke-width="2" fill="none"/><path d="M19 11v8l5 5" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+    <div class="node-name">GitHub Actions</div><div class="node-desc">sends transactions<br>every 10 min</div>
+  </div></div>
+  <div class="arrow"><svg viewBox="0 0 28 12"><line x1="0" y1="6" x2="22" y2="6" stroke="#ccc" stroke-width="1.5"/><polyline points="16,2 22,6 16,10" fill="none" stroke="#ccc" stroke-width="1.5" stroke-linejoin="round"/></svg></div>
+  <div class="node"><div class="node-box" id="n5">
+    <svg width="38" height="38" viewBox="0 0 38 38"><rect width="38" height="38" rx="8" fill="#FFD21E"/><text x="19" y="26" text-anchor="middle" font-size="20">🤗</text></svg>
+    <div class="node-name">Predict</div><div class="node-desc">&lt;100ms response<br>fraud probability<br>+ risk level</div>
+  </div></div>
+  <div class="arrow"><svg viewBox="0 0 28 12"><line x1="0" y1="6" x2="22" y2="6" stroke="#ccc" stroke-width="1.5"/><polyline points="16,2 22,6 16,10" fill="none" stroke="#ccc" stroke-width="1.5" stroke-linejoin="round"/></svg></div>
+  <div class="node"><div class="node-box" id="n6">
+    <svg width="38" height="38" viewBox="0 0 38 38"><rect width="38" height="38" rx="8" fill="#24292F"/><path fill-rule="evenodd" d="M19 5C11.268 5 5 11.268 5 19c0 6.196 4.027 11.45 9.572 13.295.7.128.956-.303.956-.674v-2.612c-3.893.847-4.714-1.654-4.714-1.654-.636-1.617-1.553-2.048-1.553-2.048-1.27-.869.097-.852.097-.852 1.407.099 2.147 1.445 2.147 1.445 1.25 2.14 3.276 1.522 4.074 1.164.126-.905.488-1.522.889-1.872-3.108-.355-6.378-1.556-6.378-6.92 0-1.529.546-2.779 1.443-3.759-.145-.354-.625-1.779.136-3.708 0 0 1.177-.376 3.853 1.435A13.43 13.43 0 0119 11.31c1.19.006 2.388.161 3.508.471 2.675-1.811 3.85-1.435 3.85-1.435.763 1.93.283 3.354.138 3.708.899.98 1.441 2.23 1.441 3.759 0 5.378-3.276 6.561-6.394 6.908.503.434.96 1.286.96 2.593v3.844c0 .374.253.808.964.671C28.977 30.445 33 25.193 33 19c0-7.732-6.268-14-14-14z" fill="white"/></svg>
+    <div class="node-name">Predictions CSV</div><div class="node-desc">committed back<br>to GitHub repo</div>
+  </div></div>
+  <div class="arrow"><svg viewBox="0 0 28 12"><line x1="0" y1="6" x2="22" y2="6" stroke="#ccc" stroke-width="1.5"/><polyline points="16,2 22,6 16,10" fill="none" stroke="#ccc" stroke-width="1.5" stroke-linejoin="round"/></svg></div>
+  <div class="node"><div class="node-box" id="n7">
+    <svg width="38" height="38" viewBox="0 0 38 38"><rect width="38" height="38" rx="8" fill="#2088FF"/><circle cx="19" cy="19" r="9" stroke="white" stroke-width="2" fill="none"/><path d="M19 11v8l5 5" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+    <div class="node-name">GitHub Actions</div><div class="node-desc">weekly drift check<br>KS + Chi-square</div>
+  </div></div>
+</div>
+
+<div class="vertical-connector" id="vc">
+  <div class="v-line"></div>
+  <div class="v-label">drift >15% → retrain</div>
+  <div class="v-line"></div>
+  <div class="v-arrow">▼</div>
+</div>
+
+<div style="display:flex;justify-content:center;">
+  <div class="node"><div class="node-box" id="n8">
+    <svg width="38" height="38" viewBox="0 0 38 38"><rect width="38" height="38" rx="8" fill="#2088FF"/><path d="M27 19c0-4.418-3.582-8-8-8-2.5 0-4.736 1.148-6.243 2.943" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M11 19c0 4.418 3.582 8 8 8 2.5 0 4.736-1.148 6.243-2.943" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M10 13l3 3-3 3" stroke="white" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M28 22l-3 3 3 3" stroke="white" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <div class="node-name">Auto Retrain</div><div class="node-desc">new model.pkl →<br>commit → redeploy</div><span class="badge badge-green">automated</span>
+  </div></div>
+</div>
+
+<script>
+const stages = [
+  { node: 'n0', arrowIdx: 0, title: 'Kaggle — Training' },
+  { node: 'n1', arrowIdx: 1, title: 'MLflow — Experiment Tracking' },
+  { node: 'n2', arrowIdx: 2, title: 'GitHub — Artefact Storage' },
+  { node: 'n3', arrowIdx: null, title: 'Hugging Face — Deploy' },
+  { node: 'n4', arrowIdx: 3, title: 'GitHub Actions — Send Transactions' },
+  { node: 'n5', arrowIdx: 4, title: 'Hugging Face — Inference' },
+  { node: 'n6', arrowIdx: 5, title: 'GitHub — Predictions CSV' },
+  { node: 'n7', arrowIdx: 'vc', title: 'GitHub Actions — Drift Monitor' },
+  { node: 'n8', arrowIdx: null, title: 'GitHub Actions — Auto Retrain' }
+];
+
+let running = false;
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+async function startPipeline() {
+  if (running) return;
+  running = true;
+  const btn = document.getElementById('btn-run');
+  if (btn) btn.disabled = true;
+
+  const arrows = document.querySelectorAll('.arrow');
+  const dots = document.querySelectorAll('.dot');
+  const status = document.getElementById('status');
+
+  for (let i = 0; i < stages.length; i++) {
+    const s = stages[i];
+    const node = document.getElementById(s.node);
+    const dot = dots[i];
+    
+    if (node) node.classList.add('active');
+    if (dot) dot.classList.add('active');
+    if (status) status.textContent = s.title;
+
+    await sleep(1000);
+
+    if (node) { node.classList.remove('active'); node.classList.add('done'); }
+    if (dot) { dot.classList.remove('active'); dot.classList.add('done'); }
+
+    if (s.arrowIdx !== null && s.arrowIdx !== 'vc') {
+      if (arrows[s.arrowIdx]) arrows[s.arrowIdx].classList.add('done');
+    } else if (s.arrowIdx === 'vc') {
+      const vc = document.getElementById('vc');
+      if (vc) {
+        vc.querySelectorAll('.v-line, .v-label, .v-arrow').forEach(c => c.classList.add('done'));
+      }
+    }
+  }
+  
+  if (status) status.textContent = 'Pipeline complete ✓';
+  running = false;
+}
+
+function resetPipeline() {
+  running = false;
+  const btn = document.getElementById('btn-run');
+  if (btn) btn.disabled = false;
+  const status = document.getElementById('status');
+  if (status) status.textContent = 'Ready';
+  
+  document.querySelectorAll('.active, .done').forEach(el => {
+    el.classList.remove('active', 'done');
+  });
+}
+</script>
+</body>
+</html>
